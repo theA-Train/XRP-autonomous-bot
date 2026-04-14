@@ -24,19 +24,15 @@ class MyRobot(wpilib.TimedRobot):
 		print("autonomousPeriodic")
 		# Move forward (speed, rotation) for 2 seconds
 		print(self.now.get())
-		if self.now.get() < 2:
-			self.left_motor.set(0.5)
-			self.right_motor.set(0.5)
-		if self.now.get() > 2: 
-			self.right_motor.set(0.5)
-			self.left_motor.stopMotor()
+		for i in range(3):
+			time_iteration = 0
+			if self.now.get() + time_iteration < 2:
+				self.left_motor.set(0.5)
+				self.right_motor.set(0.5)
+			elif 2 < self.now.get() + time_iteration > 3: 
+				self.right_motor.set(0.5)
+				self.left_motor.stopMotor()
+				time_iteration = 2
 		
-		
-
 if __name__ == "__main__":
 	wpilib.run(MyRobot)
-
-# from XRPLib.defaults import *
-
-# drivetrain.set_effort(0.5, 0.5)
-# print("success")
