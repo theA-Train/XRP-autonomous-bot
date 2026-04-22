@@ -1,0 +1,9 @@
+{
+    "types": {
+      "/FMSInfo": "FMSInfo"
+    }
+  },
+  "NetworkTables Info": {
+    "visible": true
+  }
+}
