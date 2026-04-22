@@ -1,7 +1,5 @@
 import os
 import wpilib
-from wpilib import Timer
-from xrp import XRPMotor
 from drivetrain.drivetrain import Drivetrain 
 
 os.environ["HALSIMXRP_HOST"] = "192.168.42.1"
@@ -14,13 +12,17 @@ class MyRobot(wpilib.TimedRobot):
 		self.drivetrain = Drivetrain()
 
 	def autonomousInit(self):
+		self.drivetrain.right_encoder.reset()
 		print("autonomousInit")
-		self.now = Timer()
-		self.now.reset()
-		self.now.start()
-
 
 	def autonomousPeriodic(self):
-		self.drivetrain.drive_distance(100)
-		if __name__ == "__main__":
-			wpilib.run(MyRobot)
+		if self.drivetrain.right_encoder.getDistance() < 1000:
+			self.drivetrain.left_motor.set(0.4)
+			self.drivetrain.right_motor.set(0.4)
+		else: 
+			self.drivetrain.left_motor.stopMotor()
+			self.drivetrain.right_motor.stopMotor()
+		print(self.drivetrain.left_encoder.getDistance())
+
+if __name__ == "__main__":
+	wpilib.run(MyRobot)
