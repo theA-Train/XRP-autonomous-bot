@@ -1,4 +1,5 @@
 {
+  "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo"
     }
