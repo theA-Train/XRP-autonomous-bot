@@ -13,6 +13,5 @@ class Drivetrain():
         
         self.left_encoder = Encoder(4,5)
         self.right_encoder = Encoder(6,7)
-        
-        
+
     
