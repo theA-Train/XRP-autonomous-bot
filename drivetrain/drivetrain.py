@@ -1,6 +1,6 @@
 from wpilib import Encoder
 import wpilib
-from xrp import XRPMotor
+from xrp import XRPMotor, XRPGyro
 import typing
 import time
 
@@ -13,5 +13,6 @@ class Drivetrain():
         
         self.left_encoder = Encoder(4,5)
         self.right_encoder = Encoder(6,7)
+        self.gyro = XRPGyro()
 
     

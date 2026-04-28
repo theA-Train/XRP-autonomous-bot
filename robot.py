@@ -11,6 +11,7 @@ class MyRobot(wpilib.TimedRobot):
 		# Example: Initialize XRP motors
 		self.drivetrain = Drivetrain()
 
+
 	def autonomousInit(self):
 		self.drivetrain.right_encoder.reset()
 		self.drivetrain.left_encoder.reset()
@@ -19,21 +20,29 @@ class MyRobot(wpilib.TimedRobot):
 	def autonomousPeriodic(self):
 		self.red = self.drivetrain.right_encoder.getDistance()
 		self.led = self.drivetrain.left_encoder.getDistance()
-		if self.red < 1000:
+		self.distance_error_threshold = 0.1
+		self.error = 0
+		self.gyro_angle = self.drivetrain.gyro.getAngle()
+		self.kP = 0.025
+		if self.red < 10000:
 			self.drivetrain.left_motor.set(0.4)
 			self.drivetrain.right_motor.set(0.4)
-			if self.led < self.red:
-				self.drivetrain.left_motor.set(0.4 + (0.015*(self.red - self.led)))
-				self.drivetrain.right_motor.set(0.4 - (0.015*(self.red-self.led)))
 			if self.led > self.red:
-				self.drivetrain.right_motor.set(0.4 + (0.015*(self.led - self.red)))
-				self.drivetrain.left_motor.set(0.4 - (0.01*(self.led - self.red)))
+				self.error = (self.led - self.red)
+				self.drivetrain.right_motor.set(0.4 + (self.kP*(self.error)))
+				self.drivetrain.left_motor.set(0.4 - (self.kP*(self.error)))
+				print(self.kP*(self.led - self.red), "compensation for right motor")
+			if self.led < self.red:
+				self.error = (self.red - self.led)
+				self.drivetrain.left_motor.set(0.4 + (self.kP*(self.error)))
+				self.drivetrain.right_motor.set(0.4 - (self.kP*(self.error)))
+				print(self.kP*(self.red - self.led), "compensation for left motor")
+			if (self.led - self.red) < self.distance_error_threshold or (self.red - self.led) < self.distance_error_threshold:
+				self.drivetrain.left_motor.set(0.4)
+				self.drivetrain.right_motor.set(0.4)
 		else: 
 			self.drivetrain.left_motor.stopMotor()
 			self.drivetrain.right_motor.stopMotor()
-		print(self.led)
-		print(self.red)
-		print(self.red - self.led)
 		
 
 
