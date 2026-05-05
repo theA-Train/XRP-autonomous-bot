@@ -7,7 +7,7 @@ class Drivetrain(Subsystem):
     def __init__(self):
         self.left_motor = XRPMotor(0)
         self.right_motor = XRPMotor(1)
-        self.max_effort = 1.0
+        self.max_effort = 0.8
         self.min_effort = 0.0
 		
         self.right_motor.setInverted(True) 
@@ -19,7 +19,7 @@ class Drivetrain(Subsystem):
     def get_gyro_angle(self):
         return self.gyro.getAngle() * (180/math.pi)
     
-    def clamp(self, value: float) -> float:
+    def clamp_motor(self, value: float) -> float:
         return max(min(value, self.max_effort),self.min_effort)
 
 

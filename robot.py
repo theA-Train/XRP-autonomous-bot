@@ -16,8 +16,9 @@ class MyRobot(wpilib.TimedRobot):
 		self.drivetrain.right_encoder.reset()
 		self.drivetrain.left_encoder.reset()
 		self.drivetrain.gyro.reset()
-		self.drive_command = Drive_To_Distance(self.drivetrain, 1000)
-		self.drive_command.schedule()
+		self.drive_command = Drive_To_Distance(self.drivetrain, 10000)
+		self.rotate_command = Rotate_Drivetrain(self.drivetrain, 90)
+		self.rotate_command.schedule()
 		print("autonomousInit")
 
 	def autonomousPeriodic(self):

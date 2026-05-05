@@ -8,7 +8,7 @@ class Drive_To_Distance(commands2.Command):
         self.distance = distance
         self.distance_error_threshold = 1.4
         self.error = 0.0
-        self.kP = 0.025
+        self.kP = 0.011
         self.addRequirements(self.subsystem)
 
     def execute(self):
@@ -19,13 +19,13 @@ class Drive_To_Distance(commands2.Command):
             self.subsystem.right_motor.set(0.4)
             if self.left_encoder_distance > self.right_encoder_distance:
                 self.error = (self.left_encoder_distance - self.right_encoder_distance)
-                self.subsystem.right_motor.set(self.subsystem.clamp((0.4 + (self.kP*(self.error)))))
-                self.subsystem.left_motor.set(self.subsystem.clamp(0.4 - (self.kP*(self.error))))
+                self.subsystem.right_motor.set(self.subsystem.clamp_motor((0.4 + (self.kP*(self.error)))))
+                self.subsystem.left_motor.set(self.subsystem.clamp_motor(0.4 - (self.kP*(self.error))))
                 print(self.kP*(self.left_encoder_distance - self.right_encoder_distance), "compensation for right motor")
             elif self.left_encoder_distance < self.right_encoder_distance:
                 self.error = (self.right_encoder_distance - self.left_encoder_distance)
-                self.subsystem.left_motor.set(self.subsystem.clamp((0.4 + (self.kP*(self.error)))))
-                self.subsystem.right_motor.set(self.subsystem.clamp(0.4 - (self.kP*(self.error))))
+                self.subsystem.left_motor.set(self.subsystem.clamp_motor((0.4 + (self.kP*(self.error)))))
+                self.subsystem.right_motor.set(self.subsystem.clamp_motor(0.4 - (self.kP*(self.error))))
                 print(self.kP*(self.right_encoder_distance - self.left_encoder_distance), "compensation for left motor")
             # if (self.left_encoder_distance - self.right_encoder_distance) < self.distance_error_threshold or (self.right_encoder_distance - self.left_encoder_distance) < self.distance_error_threshold:
             # 	self.subsystem.left_motor.set(0.4)
@@ -48,14 +48,15 @@ class Drive_To_Distance(commands2.Command):
 class Rotate_Drivetrain(commands2.Command):
     def __init__(self, subsystem: Drivetrain, target_angle: int):
         super().__init__()
-        self.subsystem = Drivetrain()
+        self.subsystem = subsystem
         self.target_angle = target_angle
         self.error = 0.0
         self.kP = 0.01
-        self.error_threshold = 2
+        self.error_threshold = 0.7
 
     def execute(self):
         self.current_angle = self.subsystem.get_gyro_angle()
+        print(self.current_angle)
         if self.current_angle - self.target_angle > 0:
             self.error = (self.current_angle - self.target_angle)
             self.subsystem.right_motor.set(0.4 - (self.kP*(1/self.error)))
