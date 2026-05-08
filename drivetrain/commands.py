@@ -10,49 +10,42 @@ class Drive_To_Distance(commands2.Command):
         self.subsystem = subsystem
         self.distance = distance / 7.57
         self.distance_error_threshold = 1
-        self.drive = 0.6
+        self.base_drive = 0.6
         self.past_error = 0.0
+        self.left_bias = 1.05
+        self.left_error_bias = 0.95
+        self.right_bias = 1
         self.error = 0.0
         self.kP = 0.02
-        self.kD = 0.01
+        self.kD = 0.001
+
         self.initial_time = Timer.getFPGATimestamp()
         self.addRequirements(self.subsystem)
 
     def initialize(self):
+        self.subsystem.set_left_motor(self.base_drive * self.left_bias)
+        self.subsystem.set_right_motor(self.base_drive)
         self.subsystem.left_encoder.reset()
         self.subsystem.right_encoder.reset()
 
     def execute(self):
         self.now = Timer.getFPGATimestamp()
         self.dt = self.now - self.initial_time
+        self.initial_time = self.now
         self.right_encoder_distance = self.subsystem.right_encoder.getDistance()
         self.left_encoder_distance = self.subsystem.left_encoder.getDistance()
-        if self.right_encoder_distance < self.distance:
-            self.subsystem.set_left_motor(self.drive)
-            self.subsystem.set_right_motor(self.drive)
-            if self.left_encoder_distance > self.right_encoder_distance:
-                self.past_error = self.error
-                self.error = (self.left_encoder_distance - self.right_encoder_distance)
-                self.p_term = self.kP*self.error
-                self.d_term = (self.error - self.past_error)/(self.dt)
 
-                self.drive = 0.6 + (self.p_term + self.d_term) 
+        self.past_error = self.error
+        self.error = (self.left_encoder_distance - self.right_encoder_distance)
+        self.p_term = self.kP*self.error
+        self.d_term = self.kD*((self.error - self.past_error)/(self.dt))
 
-                self.subsystem.set_right_motor(self.drive)
-                self.subsystem.set_left_motor(0.6)
-                print((self.drive - 0.6), "compensation for right motor")
-            elif self.left_encoder_distance < self.right_encoder_distance:
-                self.past_error = self.error
-                self.error = (self.right_encoder_distance - self.left_encoder_distance)
-                self.p_term = self.kP*self.error
-                self.d_term = (self.error - self.past_error)/self.dt
+        self.correction = self.p_term + self.d_term
 
-                self.drive = 0.6 + (self.p_term + self.d_term) 
-
-                self.subsystem.set_right_motor(0.6)
-                self.subsystem.set_left_motor(self.drive)
-
-                print((self.drive - 0.6), "compensation for left motor")
+        self.subsystem.set_right_motor(self.base_drive + self.correction)
+        self.subsystem.set_left_motor((self.base_drive*self.left_bias) - self.correction*self.left_error_bias) 
+        print((self.correction), "compensation for right motor")
+        print((-self.correction), "compensation for left motor")
 		
     def isFinished(self) -> bool:
         # command will NOT be interrupted
@@ -72,7 +65,7 @@ class Rotate_Drivetrain(commands2.Command):
         self.target_angle = target_angle
         self.turn = 0.0
         self.kP = 0.01
-        self.kI = (0.012 * (math.pi/180))
+        self.kI = (0.01 * (math.pi/180))
         self.error_threshold = 0.3
         self.initial_time = Timer.getFPGATimestamp()
         self.integral_error = 0.0
@@ -85,28 +78,20 @@ class Rotate_Drivetrain(commands2.Command):
         self.current_angle = self.subsystem.get_gyro_angle()
         self.now = Timer.getFPGATimestamp()
         self.dt = self.now - self.initial_time
+        self.initial_time = self.now
 
         print(self.current_angle, "degrees")
         print(self.dt, "dt")
-        if self.current_angle - self.target_angle > 0:
-            self.error = (self.current_angle - self.target_angle)
-            self.p_term = self.kP * self.error
-            self.integral_error += self.error * self.dt
-            self.i_term = self.kI*self.integral_error
-            self.turn = (self.p_term + self.i_term)
-            self.subsystem.set_left_motor(self.turn)
-            self.subsystem.set_right_motor(-self.turn)
-            print(self.turn, "left motor compensation")
-        elif self.current_angle - self.target_angle < 0:
-            self.error = (self.target_angle - self.current_angle)
-            self.p_term = self.kP * self.error
-            self.integral_error += self.error * self.dt
-            self.i_term = self.kI*self.integral_error
-            self.turn = (self.p_term + self.i_term)
-            self.subsystem.set_right_motor(self.turn)
-            self.subsystem.set_left_motor(-self.turn)
-            print(self.turn, "right motor compensation")
+        self.error = (self.current_angle - self.target_angle)
 
+        self.p_term = self.kP * self.error
+        self.integral_error += self.error * self.dt
+        self.i_term = self.kI*self.integral_error
+
+        self.turn = (self.p_term + self.i_term)
+        self.subsystem.set_left_motor(self.turn)
+        self.subsystem.set_right_motor(-self.turn)
+        print(self.turn)
 
     def isFinished(self) -> bool:
         # command will NOT be interrupted

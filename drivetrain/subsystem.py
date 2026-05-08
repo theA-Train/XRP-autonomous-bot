@@ -8,8 +8,8 @@ class Drivetrain(Subsystem):
     def __init__(self):
         self.left_motor = XRPMotor(0)
         self.right_motor = XRPMotor(1)
-        self.max_effort = 0.8
-        self.min_effort = -0.8
+        self.max_effort = 1
+        self.min_effort = -1
 
         self.right_motor.setInverted(True) 
         
