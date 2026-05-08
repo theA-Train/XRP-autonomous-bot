@@ -17,7 +17,7 @@ class Drive_To_Distance(commands2.Command):
         self.right_bias = 1
         self.error = 0.0
         self.kP = 0.02
-        self.kD = 0.001
+       #  self.kD = 0.001
 
         self.initial_time = Timer.getFPGATimestamp()
         self.addRequirements(self.subsystem)
@@ -38,9 +38,9 @@ class Drive_To_Distance(commands2.Command):
         self.past_error = self.error
         self.error = (self.left_encoder_distance - self.right_encoder_distance)
         self.p_term = self.kP*self.error
-        self.d_term = self.kD*((self.error - self.past_error)/(self.dt))
+        # self.d_term = self.kD*((self.error - self.past_error)/(self.dt))
 
-        self.correction = self.p_term + self.d_term
+        self.correction = self.p_term
 
         self.subsystem.set_right_motor(self.base_drive + self.correction)
         self.subsystem.set_left_motor((self.base_drive*self.left_bias) - self.correction*self.left_error_bias) 
@@ -64,9 +64,9 @@ class Rotate_Drivetrain(commands2.Command):
         self.subsystem = subsystem
         self.target_angle = target_angle
         self.turn = 0.0
-        self.kP = 0.01
-        self.kI = (0.01 * (math.pi/180))
-        self.error_threshold = 0.3
+        self.kP = 0.02
+        self.kI = (0.0 * (math.pi/180))
+        self.error_threshold = 0.4
         self.initial_time = Timer.getFPGATimestamp()
         self.integral_error = 0.0
 

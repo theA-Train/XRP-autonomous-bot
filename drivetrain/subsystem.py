@@ -20,6 +20,7 @@ class Drivetrain(Subsystem):
     def get_gyro_angle(self):
         # return self.gyro.getRotation2d().degrees() - 360 * math.floor((self.gyro.getRotation2d().degrees() + 180) / 360) this is essentially what angle modulus is doing
         return wpimath.angleModulus(self.gyro.getAngle()) * (180/math.pi)
+        # return self.gyro.getAngle()
     
     def clamp_motor_values(self, value: float) -> float:
         return max(min(value, self.max_effort),self.min_effort)
