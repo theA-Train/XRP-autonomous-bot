@@ -5,18 +5,18 @@ from drivetrain.subsystem import Drivetrain
 import math
 
 class Drive_To_Distance(commands2.Command):
-    def __init__(self, subsystem: Drivetrain, distance: int):
+    def __init__(self, subsystem: Drivetrain, distance: int, speed: float):
         super().__init__()
         self.subsystem = subsystem
         self.distance = distance / 7.57
         self.distance_error_threshold = 1
-        self.base_drive = 0.6
+        self.base_drive = speed
         self.past_error = 0.0
-        self.left_bias = 1.05
-        self.left_error_bias = 0.95
+        self.left_bias = 1
+        self.left_error_bias = 1
         self.right_bias = 1
         self.error = 0.0
-        self.kP = 0.02
+        self.kP = 0.01
        #  self.kD = 0.001
 
         self.initial_time = Timer.getFPGATimestamp()
@@ -64,15 +64,15 @@ class Rotate_Drivetrain(commands2.Command):
         self.subsystem = subsystem
         self.target_angle = target_angle
         self.turn = 0.0
-        self.kP = 0.02
-        self.kI = (0.0 * (math.pi/180))
-        self.error_threshold = 0.4
+        self.kP = 0.03
+        self.kI = (0.015 * (math.pi/180))
+        self.error_threshold = 1.5
         self.initial_time = Timer.getFPGATimestamp()
         self.integral_error = 0.0
 
     def initialize(self):
         self.subsystem.gyro.reset()
-        self.current_angle = 0.0
+        self.current_angle = self.subsystem.get_gyro_angle()
 
     def execute(self):
         self.current_angle = self.subsystem.get_gyro_angle()
