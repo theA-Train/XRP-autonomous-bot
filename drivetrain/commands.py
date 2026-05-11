@@ -5,6 +5,13 @@ from drivetrain.subsystem import Drivetrain
 import math
 
 class Drive_To_Distance(commands2.Command):
+    '''
+    Command to drive to a certain distance at a certain speed. Command will not be interrupted
+    Args:
+        Subsystem: Drivetrain instance
+        Distance: In centimeters
+        Speed: Base chassis speed without error correction
+    '''
     def __init__(self, subsystem: Drivetrain, distance: int, speed: float):
         super().__init__()
         self.subsystem = subsystem
@@ -59,6 +66,13 @@ class Drive_To_Distance(commands2.Command):
         self.subsystem.set_right_motor(0)
 
 class Rotate_Drivetrain(commands2.Command):
+    '''
+    Command to rotate drivetrain (diffy drivetrain so no pivoting.) Command will not be interrupted.
+
+    Args:
+        subsystem: Drivetrain instance
+        target_angle: float but in degrees
+    '''
     def __init__(self, subsystem: Drivetrain, target_angle: float):
         super().__init__()
         self.subsystem = subsystem
@@ -105,9 +119,19 @@ class Rotate_Drivetrain(commands2.Command):
         self.subsystem.set_right_motor(0.0)
 
 class Wait(commands2.WaitCommand):
+    '''
+    Command that pauses the scheduler without alerting watchdog
+    Args:
+        Seconds: float
+    '''
     def __init__(self, seconds: float):
         super().__init__(seconds)
 
 class Ramp_Routine(commands2.SequentialCommandGroup):
+    '''
+    Command group that initalizes and stores all the commands needed for the ramp routine, executed sequentially
+    Args:
+        commands: Command instance
+    '''
     def addCommands(self, *commands: commands2.Command):
         return super().addCommands(*commands)

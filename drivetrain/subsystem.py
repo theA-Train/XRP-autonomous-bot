@@ -5,6 +5,9 @@ from xrp import XRPMotor, XRPGyro
 import math
 
 class Drivetrain(Subsystem):
+    """
+    Drivetrain class that initalizes motors, encoders, and gyro, with set and getter logic to clamp motor values to min and max values
+    """
     def __init__(self):
         self.left_motor = XRPMotor(0)
         self.right_motor = XRPMotor(1)
@@ -18,17 +21,35 @@ class Drivetrain(Subsystem):
         self.gyro = XRPGyro()
 
     def get_gyro_angle(self):
+        '''
+        Returns angles in the range between -180 and 180 degrees as the standard getAngle() method for XRPgyros are continuous.
+        '''
         # return self.gyro.getRotation2d().degrees() - 360 * math.floor((self.gyro.getRotation2d().degrees() + 180) / 360) this is essentially what angle modulus is doing
         return wpimath.angleModulus(self.gyro.getAngle()) * (180/math.pi)
         # return self.gyro.getAngle()
     
     def clamp_motor_values(self, value: float) -> float:
+        '''
+        Clamps a value to -1 and 1 so motors aren't being set to values higher or lower than that.
+        
+        :param value: Value being clamped between -1 and 1
+        '''
         return max(min(value, self.max_effort),self.min_effort)
     
     def set_left_motor(self, value:float):
+        """
+        Sets motor speed while clamping values to -1 and 1
+        
+        :param value: float
+        """
         self.left_motor.set(self.clamp_motor_values(value))
 
     def set_right_motor(self, value:float):
+        '''
+        Sets motor speed while clamping values to -1 and 1
+        
+        :param value: float
+        '''
         self.right_motor.set(self.clamp_motor_values(value))
     
 
