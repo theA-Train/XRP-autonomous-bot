@@ -20,7 +20,7 @@ class Drivetrain(Subsystem):
         self.right_encoder = Encoder(6,7)
         self.gyro = XRPGyro()
 
-    def get_gyro_angle(self):
+    def get_gyro_angle(self) -> float: 
         '''
         Returns angles in the range between -180 and 180 degrees as the standard getAngle() method for XRPgyros are continuous.
         '''
@@ -35,24 +35,10 @@ class Drivetrain(Subsystem):
         :param value: Value being clamped between -1 and 1
         '''
         return max(min(value, self.max_effort),self.min_effort)
-    
-    def set_left_motor(self, value:float):
+
+    def set_differential_drive(self, left_motor_value: float, right_motor_value: float):
         """
-        Sets motor speed while clamping values to -1 and 1
-        
-        :param value: float
+        Sets both left and right motor values while camping any values to -1 and 1
         """
-        self.left_motor.set(self.clamp_motor_values(value))
-
-    def set_right_motor(self, value:float):
-        '''
-        Sets motor speed while clamping values to -1 and 1
-        
-        :param value: float
-        '''
-        self.right_motor.set(self.clamp_motor_values(value))
-    
-
-
-
-    
+        self.left_motor.set(self.clamp_motor_values(left_motor_value))
+        self.right_motor.set(self.clamp_motor_values(right_motor_value))
