@@ -19,6 +19,9 @@ class Drive_To_Distance(commands2.Command):
         self.distance_error_threshold = 1
         self.base_drive = speed
         self.past_error = 0.0
+        self.left_bias = 1
+        self.left_error_bias = 1
+        self.right_bias = 1
         self.error = 0.0
         self.kP = 0.01
        #  self.kD = 0.001
@@ -27,7 +30,8 @@ class Drive_To_Distance(commands2.Command):
         self.addRequirements(self.subsystem)
 
     def initialize(self):
-        self.subsystem.set_differential_drive(self.base_drive, self.base_drive)
+        self.subsystem.set_left_motor(self.base_drive * self.left_bias)
+        self.subsystem.set_right_motor(self.base_drive)
         self.subsystem.left_encoder.reset()
         self.subsystem.right_encoder.reset()
 
@@ -45,7 +49,8 @@ class Drive_To_Distance(commands2.Command):
 
         self.correction = self.p_term
 
-        self.subsystem.set_differential_drive((self.base_drive + self.correction), (self.base_drive - self.correction))
+        self.subsystem.set_right_motor(self.base_drive + self.correction)
+        self.subsystem.set_left_motor((self.base_drive*self.left_bias) - self.correction*self.left_error_bias) 
         print((self.correction), "compensation for right motor")
         print((-self.correction), "compensation for left motor")
 		
@@ -57,7 +62,8 @@ class Drive_To_Distance(commands2.Command):
                 return False
     
     def end(self, interrupted):
-        self.subsystem.set_differential_drive(0,0)
+        self.subsystem.set_left_motor(0)
+        self.subsystem.set_right_motor(0)
 
 class Rotate_Drivetrain(commands2.Command):
     '''
@@ -65,20 +71,18 @@ class Rotate_Drivetrain(commands2.Command):
 
     Args:
         subsystem: Drivetrain instance
-        target_angle: degrees with float precision
+        target_angle: float but in degrees
     '''
     def __init__(self, subsystem: Drivetrain, target_angle: float):
         super().__init__()
         self.subsystem = subsystem
         self.target_angle = target_angle
         self.turn = 0.0
-        self.kP = 0.02 * (math.pi/180)
-        self.kI = 0.01 * (math.pi/180)
-        self.kD = 0.01
+        self.kP = 0.03
+        self.kI = (0.015 * (math.pi/180))
         self.error_threshold = 1.5
         self.initial_time = Timer.getFPGATimestamp()
         self.integral_error = 0.0
-        self.prev_error = 0.0
 
     def initialize(self):
         self.subsystem.gyro.reset()
@@ -97,13 +101,10 @@ class Rotate_Drivetrain(commands2.Command):
         self.p_term = self.kP * self.error
         self.integral_error += self.error * self.dt
         self.i_term = self.kI*self.integral_error
-        self.derivative_error = (self.error - self.prev_error) / self.dt
-        self.prev_error = self.error
-        self.d_term = self.kD*self.derivative_error
 
-        self.turn = (self.p_term + self.i_term + self.d_term)
-        self.subsystem.set_differential_drive(self.turn, -self.turn)
-
+        self.turn = (self.p_term + self.i_term)
+        self.subsystem.set_left_motor(self.turn)
+        self.subsystem.set_right_motor(-self.turn)
         print(self.turn)
 
     def isFinished(self) -> bool:
@@ -114,7 +115,8 @@ class Rotate_Drivetrain(commands2.Command):
             return False
 
     def end(self, interrupted):
-        self.subsystem.set_differential_drive(0,0)
+        self.subsystem.set_left_motor(0.0)
+        self.subsystem.set_right_motor(0.0)
 
 class Wait(commands2.WaitCommand):
     '''
@@ -125,7 +127,7 @@ class Wait(commands2.WaitCommand):
     def __init__(self, seconds: float):
         super().__init__(seconds)
 
-class Shape_Path(commands2.SequentialCommandGroup):
+class Ramp_Routine(commands2.SequentialCommandGroup):
     '''
     Command group that initalizes and stores all the commands needed for the ramp routine, executed sequentially
     Args:
