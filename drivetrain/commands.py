@@ -3,6 +3,7 @@ from wpimath.units import seconds
 from wpilib import Timer
 from drivetrain.subsystem import Drivetrain
 import math
+import csv
 
 class Drive_To_Distance(commands2.Command):
     '''
@@ -121,3 +122,24 @@ class Wait(commands2.WaitCommand):
     '''
     def __init__(self, seconds: float):
         super().__init__(seconds)
+
+class PrintReflectance(commands2.Command):
+    def __init__(self, subsystem: Drivetrain):
+        super().__init__
+        self.subsystem = subsystem
+        self.data = []
+
+    def execute(self):
+        # print(self.subsystem.get_tuple_reflectance())
+        self.data.append(self.subsystem.get_tuple_reflectance())
+        print(self.data)
+
+    def isFinished(self) -> bool:
+        return False
+
+    def end(self, interrupted: bool):
+        with open('data', 'w', newline ='') as file: 
+            writer = csv.writer(file)
+            for data in self.data:
+                writer.writerows([self.data[data][0]])
+

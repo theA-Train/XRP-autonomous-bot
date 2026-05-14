@@ -18,6 +18,8 @@ class MyRobot(wpilib.TimedRobot):
 		self.drivetrain.right_encoder.reset()
 		self.drivetrain.left_encoder.reset()
 
+		self.reflectance_print = PrintReflectance(self.drivetrain).withTimeout(2.0)
+		self.reflectance_print.schedule()
 		print("autonomousInit")
 
 	def autonomousPeriodic(self):
