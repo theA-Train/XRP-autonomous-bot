@@ -18,9 +18,6 @@ class MyRobot(wpilib.TimedRobot):
 		self.drivetrain.right_encoder.reset()
 		self.drivetrain.left_encoder.reset()
 
-		self.line_command = Drive_To_Distance(self.drivetrain, 2000, 0.4)
-		self.angle_command = Rotate_Drivetrain(self.drivetrain, 60) # creates an equilateral triangle, change it to 90 degrees to make a square or 120 for a pentagon etc.
-		self.shape = Shape(self.line_command, self.angle_command).repeatedly()
 		print("autonomousInit")
 
 	def autonomousPeriodic(self):

@@ -1,8 +1,9 @@
 from wpilib import Encoder
 import wpimath
 from commands2 import Subsystem
-from xrp import XRPMotor, XRPGyro
+from xrp import XRPMotor, XRPGyro, XRPReflectanceSensor
 import math
+import matplotlib.pyplot as plt
 
 class Drivetrain(Subsystem):
     """
@@ -19,6 +20,7 @@ class Drivetrain(Subsystem):
         self.left_encoder = Encoder(4,5)
         self.right_encoder = Encoder(6,7)
         self.gyro = XRPGyro()
+        self.reflection_sensor = XRPReflectanceSensor()
 
     def get_gyro_angle(self):
         '''
@@ -36,21 +38,12 @@ class Drivetrain(Subsystem):
         '''
         return max(min(value, self.max_effort),self.min_effort)
     
-    def set_left_motor(self, value:float):
-        """
-        Sets motor speed while clamping values to -1 and 1
-        
-        :param value: float
-        """
-        self.left_motor.set(self.clamp_motor_values(value))
 
-    def set_right_motor(self, value:float):
-        '''
-        Sets motor speed while clamping values to -1 and 1
-        
-        :param value: float
-        '''
-        self.right_motor.set(self.clamp_motor_values(value))
+    def get_tuple_reflectance(self):
+        return (self.reflection_sensor.getRightReflectanceValue(), self.reflection_sensor.getLeftReflectanceValue())
+    
+    def graph(self):
+        plt.plot(self.get_tuple_reflectance())
     
 
 

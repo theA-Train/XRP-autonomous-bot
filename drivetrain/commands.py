@@ -126,16 +126,3 @@ class Wait(commands2.WaitCommand):
     '''
     def __init__(self, seconds: float):
         super().__init__(seconds)
-
-class Ramp_Routine(commands2.SequentialCommandGroup):
-    '''
-    Command group that initalizes and stores all the commands needed for the ramp routine, executed sequentially
-    Args:
-        commands: Command instance
-    '''
-    def addCommands(self, *commands: commands2.Command):
-        return super().addCommands(*commands)
-    
-class Shape(commands2.SequentialCommandGroup):
-    def addCommands(self, *commands: commands2.Command):
-        return super().addCommands(*commands)
