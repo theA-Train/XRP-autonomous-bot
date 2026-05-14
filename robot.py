@@ -17,7 +17,7 @@ class MyRobot(wpilib.TimedRobot):
 	def autonomousInit(self):
 
 		self.line = Drive_To_Distance(self.drivetrain, 5000, 0.4)
-		self.angle = Rotate_Drivetrain(self.drivetrain, 60)
+		self.angle = Rotate_Drivetrain(self.drivetrain, 60) # change the angle to get the desired equilateral shape :)
 		self.shape = Shape_Path(self.line, self.angle).repeatedly()
 		self.shape.schedule()
 		print("autonomousInit")
