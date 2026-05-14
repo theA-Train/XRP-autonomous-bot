@@ -30,8 +30,7 @@ class Drive_To_Distance(commands2.Command):
         self.addRequirements(self.subsystem)
 
     def initialize(self):
-        self.subsystem.set_left_motor(self.base_drive * self.left_bias)
-        self.subsystem.set_right_motor(self.base_drive)
+        self.subsystem.differential_drive(0,0)
         self.subsystem.left_encoder.reset()
         self.subsystem.right_encoder.reset()
 
@@ -49,8 +48,7 @@ class Drive_To_Distance(commands2.Command):
 
         self.correction = self.p_term
 
-        self.subsystem.set_right_motor(self.base_drive + self.correction)
-        self.subsystem.set_left_motor((self.base_drive*self.left_bias) - self.correction*self.left_error_bias) 
+        self.subsystem.differential_drive((self.base_drive + self.correction), (self.base_drive - self.correction))
         print((self.correction), "compensation for right motor")
         print((-self.correction), "compensation for left motor")
 		
@@ -62,8 +60,7 @@ class Drive_To_Distance(commands2.Command):
                 return False
     
     def end(self, interrupted):
-        self.subsystem.set_left_motor(0)
-        self.subsystem.set_right_motor(0)
+        self.subsystem.differential_drive(0,0)
 
 class Rotate_Drivetrain(commands2.Command):
     '''
@@ -103,8 +100,7 @@ class Rotate_Drivetrain(commands2.Command):
         self.i_term = self.kI*self.integral_error
 
         self.turn = (self.p_term + self.i_term)
-        self.subsystem.set_left_motor(self.turn)
-        self.subsystem.set_right_motor(-self.turn)
+        self.subsystem.differential_drive(-self.turn, self.turn)
         print(self.turn)
 
     def isFinished(self) -> bool:
@@ -115,8 +111,7 @@ class Rotate_Drivetrain(commands2.Command):
             return False
 
     def end(self, interrupted):
-        self.subsystem.set_left_motor(0.0)
-        self.subsystem.set_right_motor(0.0)
+        self.subsystem.differential_drive(0,0)
 
 class Wait(commands2.WaitCommand):
     '''

@@ -36,21 +36,12 @@ class Drivetrain(Subsystem):
         '''
         return max(min(value, self.max_effort),self.min_effort)
     
-    def set_left_motor(self, value:float):
+    def differential_drive(self, Rvalue: float, Lvalue: float):
         """
-        Sets motor speed while clamping values to -1 and 1
-        
-        :param value: float
+        Set right and left value of motors, clamped to -1 and 1
         """
-        self.left_motor.set(self.clamp_motor_values(value))
-
-    def set_right_motor(self, value:float):
-        '''
-        Sets motor speed while clamping values to -1 and 1
-        
-        :param value: float
-        '''
-        self.right_motor.set(self.clamp_motor_values(value))
+        self.right_motor.set(self.clamp_motor_values(Rvalue))
+        self.left_motor.set(self.clamp_motor_values(Lvalue))
     
 
 
