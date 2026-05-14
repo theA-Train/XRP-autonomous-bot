@@ -135,3 +135,7 @@ class Ramp_Routine(commands2.SequentialCommandGroup):
     '''
     def addCommands(self, *commands: commands2.Command):
         return super().addCommands(*commands)
+    
+class Shape(commands2.SequentialCommandGroup):
+    def addCommands(self, *commands: commands2.Command):
+        return super().addCommands(*commands)

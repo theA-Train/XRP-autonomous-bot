@@ -18,19 +18,9 @@ class MyRobot(wpilib.TimedRobot):
 		self.drivetrain.right_encoder.reset()
 		self.drivetrain.left_encoder.reset()
 
-		# initializing all the commands to run the ramp routine
-		self.drive_to_ramp_command = Drive_To_Distance(self.drivetrain, 5500, 0.4)
-		self.drive_up_ramp_command = Drive_To_Distance(self.drivetrain, 34300, 0.7)
-		self.rotate_to_ramp_command = Rotate_Drivetrain(self.drivetrain, 85)
-		self.rotate_from_ramp_command = Rotate_Drivetrain(self.drivetrain, 88)
-		self.drive_bridge_command = Drive_To_Distance(self.drivetrain, 20000, 0.4)
-		self.wait_command = Wait(0.3)
-
-		# the ramp_routine class passes in all the commands initalized above into a "sequential command group" that runs one by one
-		self.ramp_auto = Ramp_Routine(self.drive_to_ramp_command, self.wait_command, self.rotate_to_ramp_command, self.drive_up_ramp_command, self.rotate_from_ramp_command, self.drive_bridge_command)
-		# self.rotate_to_ramp_command.schedule()
-		self.ramp_auto.schedule()
-		# self.drive_up_ramp_command.schedule()
+		self.line_command = Drive_To_Distance(self.drivetrain, 2000, 0.4)
+		self.angle_command = Rotate_Drivetrain(self.drivetrain, 60) # creates an equilateral triangle, change it to 90 degrees to make a square or 120 for a pentagon etc.
+		self.shape = Shape(self.line_command, self.angle_command).repeatedly()
 		print("autonomousInit")
 
 	def autonomousPeriodic(self):
