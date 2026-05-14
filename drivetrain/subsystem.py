@@ -38,6 +38,12 @@ class Drivetrain(Subsystem):
         '''
         return max(min(value, self.max_effort),self.min_effort)
     
+    def differential_drive(self, Rvalue: float, Lvalue: float):
+        """
+        Set right and left value of motors, clamped to -1 and 1
+        """
+        self.right_motor.set(self.clamp_motor_values(Rvalue))
+        self.left_motor.set(self.clamp_motor_values(Lvalue))
 
     def get_tuple_reflectance(self):
         return (self.reflection_sensor.getRightReflectanceValue(), self.reflection_sensor.getLeftReflectanceValue())
