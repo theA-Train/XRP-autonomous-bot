@@ -1,3 +1,4 @@
+from typing import Callable, Dict, Hashable
 import commands2
 from wpimath.units import seconds
 from wpilib import Timer
@@ -7,17 +8,15 @@ import csv
 
 class Drive_To_Distance(commands2.Command):
     '''
-    Command to drive to a certain distance at a certain speed. Command will not be interrupted
+    Command to drive to a certain distance at a certain speed. Command will be interrupted
     Args:
         Subsystem: Drivetrain instance
         Distance: In centimeters
         Speed: Base chassis speed without error correction
     '''
-    def __init__(self, subsystem: Drivetrain, distance: int, speed: float):
+    def __init__(self, subsystem: Drivetrain, speed: float):
         super().__init__()
         self.subsystem = subsystem
-        self.distance = distance / 7.57
-        self.distance_error_threshold = 1
         self.base_drive = speed
         self.past_error = 0.0
         self.left_bias = 1
@@ -54,18 +53,14 @@ class Drive_To_Distance(commands2.Command):
         print((-self.correction), "compensation for left motor")
 		
     def isFinished(self) -> bool:
-        # command will NOT be interrupted
-        if 0.5*(self.right_encoder_distance + self.left_encoder_distance) >= self.distance:
-               return True
-        else:
-                return False
+        return False
     
     def end(self, interrupted):
         self.subsystem.differential_drive(0,0)
 
 class Rotate_Drivetrain(commands2.Command):
     '''
-    Command to rotate drivetrain (diffy drivetrain so no pivoting.) Command will not be interrupted.
+    Command to rotate drivetrain (diffy drivetrain so no pivoting.) Command will be interrupted.
 
     Args:
         subsystem: Drivetrain instance
@@ -105,11 +100,7 @@ class Rotate_Drivetrain(commands2.Command):
         print(self.turn)
 
     def isFinished(self) -> bool:
-        # command will NOT be interrupted
-        if abs(self.target_angle - self.current_angle) < self.error_threshold:
-            return True
-        else:
-            return False
+        return False
 
     def end(self, interrupted):
         self.subsystem.differential_drive(0,0)
@@ -125,21 +116,36 @@ class Wait(commands2.WaitCommand):
 
 class PrintReflectance(commands2.Command):
     def __init__(self, subsystem: Drivetrain):
-        super().__init__
+        super().__init__()
         self.subsystem = subsystem
-        self.data = []
+        self.data_r_values = []
+        self.data_l_values = []
 
     def execute(self):
         # print(self.subsystem.get_tuple_reflectance())
-        self.data.append(self.subsystem.get_tuple_reflectance())
-        print(self.data)
+        self.data_r_values.append(self.subsystem.get_tuple_reflectance()[0])
+        self.data_l_values.append(self.subsystem.get_tuple_reflectance()[1])
+        print("hello scheduler please dont get mad at me :)")
 
     def isFinished(self) -> bool:
         return False
 
     def end(self, interrupted: bool):
-        with open('data', 'w', newline ='') as file: 
+        with open('leftdatavalues', 'w', newline = '') as file:
             writer = csv.writer(file)
-            for data in self.data:
-                writer.writerows([self.data[data][0]])
+            writer.writerows([self.data_l_values])
 
+        with open('rightdatavalues', 'w', newline ='') as file: 
+            writer = csv.writer(file)
+            writer.writerows([self.data_r_values])
+
+class LineFollowing(commands2.SelectCommand):
+    def __init__(self, subsystem: Drivetrain, drive: Drive_To_Distance, turn: Rotate_Drivetrain):
+        super().__init__(
+            {
+                True: drive,
+                False: turn
+            },
+            lambda: subsystem.get_left_reflectance() > 0.9 and subsystem.get_right_reflectance() > 0.9
+        )
+        self.addRequirements(subsystem)

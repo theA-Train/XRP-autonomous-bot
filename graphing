@@ -4,7 +4,7 @@ import pandas as pd
 
 data = []
 
-with open('/Users/aandrade/Documents/GitHub/XRP autonomous bot/data', mode = 'r') as file:
+with open('/Users/aandrade/Documents/GitHub/XRP autonomous bot/leftdatavalues', mode = 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         data.append(row)
@@ -12,4 +12,6 @@ with open('/Users/aandrade/Documents/GitHub/XRP autonomous bot/data', mode = 'r'
 for row in data:
     points = [float(value) for value in row]
     plt.plot(points)
+
+plt.show()
 

@@ -2,8 +2,7 @@
 
 import os
 import wpilib
-from drivetrain.subsystem import Drivetrain
-from drivetrain.commands import *
+from drivetrain import *
 import commands2
 
 os.environ["HALSIMXRP_HOST"] = "192.168.42.1"
@@ -18,8 +17,7 @@ class MyRobot(wpilib.TimedRobot):
 		self.drivetrain.right_encoder.reset()
 		self.drivetrain.left_encoder.reset()
 
-		self.reflectance_print = PrintReflectance(self.drivetrain).withTimeout(2.0)
-		self.reflectance_print.schedule()
+		self.print_reflectance = PrintReflectance(self.drivetrain).withTimeout(2.0)
 		print("autonomousInit")
 
 	def autonomousPeriodic(self):

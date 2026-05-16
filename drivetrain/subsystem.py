@@ -45,11 +45,15 @@ class Drivetrain(Subsystem):
         self.right_motor.set(self.clamp_motor_values(Rvalue))
         self.left_motor.set(self.clamp_motor_values(Lvalue))
 
+    def get_left_reflectance(self):
+        return self.reflection_sensor.getLeftReflectanceValue()
+    
+    def get_right_reflectance(self):
+        return self.reflection_sensor.getRightReflectanceValue()
+
     def get_tuple_reflectance(self):
         return (self.reflection_sensor.getRightReflectanceValue(), self.reflection_sensor.getLeftReflectanceValue())
-    
-    def graph(self):
-        plt.plot(self.get_tuple_reflectance())
+
     
 
 
