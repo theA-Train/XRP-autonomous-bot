@@ -41,7 +41,7 @@ class Drive_To_Distance(commands2.Command):
         self.right_encoder_distance = self.subsystem.right_encoder.getDistance()
         self.left_encoder_distance = self.subsystem.left_encoder.getDistance()
 
-        self.past_error = self.error
+        # self.past_error = self.error
         self.error = (self.left_encoder_distance - self.right_encoder_distance)
         self.p_term = self.kP*self.error
         # self.d_term = self.kD*((self.error - self.past_error)/(self.dt))
@@ -56,7 +56,7 @@ class Drive_To_Distance(commands2.Command):
         return False
     
     def end(self, interrupted):
-        self.subsystem.differential_drive(0,0)
+        print('end')
 
 class Rotate_Drivetrain(commands2.Command):
     '''
@@ -66,11 +66,11 @@ class Rotate_Drivetrain(commands2.Command):
         subsystem: Drivetrain instance
         target_angle: float but in degrees
     '''
-    def __init__(self, subsystem: Drivetrain, target_angle: float):
+    def __init__(self, subsystem: Drivetrain, turn: float) # target_angle: float
         super().__init__()
         self.subsystem = subsystem
-        self.target_angle = target_angle
-        self.turn = 0.0
+        # self.target_angle = target_angle
+        self.turn = turn
         self.kP = 0.03
         self.kI = (0.015 * (math.pi/180))
         self.error_threshold = 1.5
@@ -89,17 +89,20 @@ class Rotate_Drivetrain(commands2.Command):
 
         print(self.current_angle, "degrees")
         print(self.dt, "dt")
-        self.error = (self.current_angle - self.target_angle)
+       #self.error = (self.current_angle - self.target_angle)
 
-        self.p_term = self.kP * self.error
-        self.integral_error += self.error * self.dt
-        self.i_term = self.kI*self.integral_error
+       # self.p_term = self.kP * self.error
+        # self.integral_error += self.error * self.dt
+        # self.i_term = self.kI*self.integral_error
 
-        self.turn = (self.p_term + self.i_term)
+       # self.turn = (self.p_term + self.i_term)
         self.subsystem.differential_drive(-self.turn, self.turn)
         print(self.turn)
 
     def isFinished(self) -> bool:
+        """
+       command will not be interrupted 
+        """
         return False
 
     def end(self, interrupted):
@@ -125,7 +128,7 @@ class PrintReflectance(commands2.Command):
         # print(self.subsystem.get_tuple_reflectance())
         self.data_r_values.append(self.subsystem.get_tuple_reflectance()[0])
         self.data_l_values.append(self.subsystem.get_tuple_reflectance()[1])
-        print("hello scheduler please dont get mad at me :)")
+        print()
 
     def isFinished(self) -> bool:
         return False
@@ -141,11 +144,12 @@ class PrintReflectance(commands2.Command):
 
 class LineFollowing(commands2.SelectCommand):
     def __init__(self, subsystem: Drivetrain, drive: Drive_To_Distance, turn: Rotate_Drivetrain):
+        self.high_reflectance = 0.7
         super().__init__(
             {
-                True: drive,
-                False: turn
+                True: drive.repeatedly(),
+                False: turn.repeatedly()
             },
-            lambda: subsystem.get_left_reflectance() > 0.9 and subsystem.get_right_reflectance() > 0.9
+            lambda: subsystem.get_left_reflectance() < self.high_reflectance and subsystem.get_right_reflectance() < self.high_reflectance
         )
         self.addRequirements(subsystem)

@@ -5,6 +5,16 @@
         "header": {
           "open": true
         }
+      },
+      "motorL": {
+        "header": {
+          "open": true
+        }
+      },
+      "motorR": {
+        "header": {
+          "open": true
+        }
       }
     }
   },
