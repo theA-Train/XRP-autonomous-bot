@@ -2,7 +2,7 @@
 import os
 from enum import Enum
 import wpilib
-from .drivetrain import Drivetrain
+from drivetrain import Drivetrain
 
 
 os.environ["HALSIMXRP_HOST"] = "192.168.42.1"
@@ -33,7 +33,7 @@ class MyRobot(wpilib.TimedRobot):
             right_front_val = self.drivetrain.front_reflectance.getRightReflectanceValue()
             return left_front_val > LINE_THRESHOLD or right_front_val > LINE_THRESHOLD
  
-        def line_rear_detected():
+       # def line_rear_detected():
             """Returns True if either rear sensors sees a line."""
             left_back_val = self.drivetrain.rear_reflectance.getLeftReflectanceValue()
             right_back_val = self.drivetrain.rear_reflectance.getRightReflectanceValue()
@@ -64,9 +64,13 @@ class MyRobot(wpilib.TimedRobot):
                         self.state = State.RAM
                 case (State.LINE_DETECTED):
                     if line_front_detected():
-                        "hi"
+                        
 
-        state_machine()
+        # state_machine()
+
+        
+        self.drivetrain.drive_straight(0.8)
+        # self.drivetrain.rotate_drivetrain(0.8, 40)
  
  
 if __name__ == "__main__":
