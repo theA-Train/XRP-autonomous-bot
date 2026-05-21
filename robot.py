@@ -18,13 +18,13 @@ class MyRobot(wpilib.TimedRobot):
     def autonomousInit(self):
         print("autonomousInit")
         self.drivetrain.reset_encoders()
-        self.state = 0
+        self.state = 5
 
     def autonomousPeriodic(self):
  
         # ---------------- CONSTANTS ----------------
         LINE_THRESHOLD   = 0.65    # Reflectance value above which a line is detected (0.0–1.0)
-        BASE_SPEED       = 0.5    # Drive speed (0.0–1.0)
+        BASE_SPEED       = -0.8    # Drive speed (0.0–1.0)
         # -------------- HELPER FUNCTIONS --------------
  
         def line_front_detected():
@@ -53,24 +53,23 @@ class MyRobot(wpilib.TimedRobot):
         def state_machine():
             match(self.state):
                 case (State.RAM):
-                    if opponent_detected():
-                        self.drivetrain.drive_straight(BASE_SPEED)
-                    else:
+                    self.drivetrain.drive_straight(BASE_SPEED)
+                    if opponent_detected() == False:
                         self.state = State.FIND_OPPONENT
                 case (State.FIND_OPPONENT):
-                    self.drivetrain.rotate_drivetrain(BASE_SPEED, 360)
-                    if opponent_detected():
+                    self.drivetrain.rotate_drivetrain(360)
+                    print("FINDING OPPONENT...")
+                    if opponent_detected() == True:
                         self.drivetrain.reset_encoders()
                         self.state = State.RAM
                 case (State.LINE_DETECTED):
                     if line_front_detected():
+                        "hello"
                         
 
         # state_machine()
-
-        
+        # print(self.drivetrain.object_detection())
         self.drivetrain.drive_straight(0.8)
-        # self.drivetrain.rotate_drivetrain(0.8, 40)
  
  
 if __name__ == "__main__":

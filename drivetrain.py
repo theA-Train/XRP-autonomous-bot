@@ -47,13 +47,20 @@ class CustomPIDController():
             self.last_error = error
             return self.kP * error
         dt = now - self.initial_time
-
-        self.last_error = error
-
+        if dt <= 0:
+            return self.kP * error
+        
         p_out = self.kP * error
+
+
+
         self.integral += error * dt
         i_out = self.kI * self.integral
+
         d_out = self.kD * ((error - self.last_error)/dt)
+
+        self.last_error = error
+        self.last_time = now
 
         correction = p_out + i_out + d_out
         return correction
@@ -89,20 +96,20 @@ class Drivetrain(Subsystem):
 
         # --- Line Sensors ---
         self.front_reflectance = XRPReflectanceSensor()
-        # self.rear_reflectance = XRPReflectanceSensor()
+        self.rear_reflectance = XRPReflectanceSensor()
 
         # PID controllers
-        self.drive_pid = CustomPIDController(0.1, 0, 0)
+        self.drive_pid = CustomPIDController(0.01, 0, 0.001)
         self.gyro_pid = CustomPIDController(0.3, 0.0, 0.2)
 
         # Weighted constant for error fusion
-        self.alpha = 1
+        self.alpha = 0.4
 
         # Error tolerance constants
         self.error_gyro_tolerance = 3
 
         # Range finder ram detection constant
-        self.ram_range = 1
+        self.ram_range = 0.5
     
     def set_motor_speeds(self, left_speed: float, right_speed: float):
         self.left_front_motor.set(left_speed)
@@ -122,38 +129,37 @@ class Drivetrain(Subsystem):
 
     def reset_gyro(self):
         self.gyro.reset()
-
+    
+    def get_gyro_angle(self) -> float:
+        return wpimath.angleModulus(self.gyro.getAngle()) * (180/math.pi)
+    
     def drive_straight(self, base_speed: float, target_heading = 0.0):
         left_avg_dist = (self.left_rear_encoder.getDistance() + self.left_front_encoder.getDistance()) / 2
         right_avg_dist = (self.right_front_encoder.getDistance() + self.right_rear_encoder.getDistance()) / 2
 
-        gyro_error = target_heading - self.gyro.getAngle()
+        gyro_error = target_heading - self.get_gyro_angle()
         encoder_error = left_avg_dist - right_avg_dist
 
         fused_error = (self.alpha * gyro_error) + ((1 - self.alpha)* encoder_error)
         correction = self.drive_pid.calculate(fused_error)
 
         self.set_motor_speeds(base_speed + correction, base_speed - correction)
+        print(self.get_gyro_angle())
 
-    def get_gyro_angle(self) -> float:
-        return wpimath.angleModulus(self.gyro.getAngle()) * (180/math.pi)
-    
-
-    def rotate_drivetrain(self, base_speed: float, target_angle):
-        minimum_speed = 0.1 # turning and using the gyro is prone to steady state error
+    def rotate_drivetrain(self, target_angle: float):
 
         gyro_error = target_angle - self.get_gyro_angle()
-        correction = self.gyro_pid.calculate(gyro_error)
-        turn_speed = base_speed + correction
+        turn_speed = self.gyro_pid.calculate(gyro_error)
 
         # minimum speed logic
+
+        minimum_speed = 0.15 
         if abs(turn_speed) < minimum_speed:
-            turn_speed = minimum_speed
-        elif turn_speed >= 0 and abs(turn_speed) < minimum_speed:
-            turn_speed = -minimum_speed
+            turn_speed = math.copysign(minimum_speed, turn_speed)
+        turn_speed = max(-1.0, min(1.0, turn_speed))
 
         self.set_motor_speeds(turn_speed, -turn_speed)
-        print(turn_speed)
+        print(self.get_gyro_angle())
 
     def object_detection(self) -> bool:
-        return self.range.getDistance() > self.ram_range
+        return self.range.getDistance() < self.ram_range
