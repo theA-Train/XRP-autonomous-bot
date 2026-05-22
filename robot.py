@@ -1,4 +1,3 @@
-
 import os
 from enum import Enum
 import wpilib
@@ -7,7 +6,14 @@ from drivetrain import Drivetrain
 
 os.environ["HALSIMXRP_HOST"] = "192.168.42.1"
 os.environ["HALSIMXRP_PORT"] = "3540"
- 
+    
+# ---------------- CONSTANTS ----------------
+LINE_THRESHOLD   = 0.65    # Reflectance value above which a line is detected (0.0–1.0)
+BASE_SPEED       = 0.8    # Drive speed (0.0–1.0)
+class State(Enum):
+    RAM = 0
+    FIND_OPPONENT = 1
+    LINE_DETECTED = 2
  
 class MyRobot(wpilib.TimedRobot):
  
@@ -18,61 +24,61 @@ class MyRobot(wpilib.TimedRobot):
     def autonomousInit(self):
         print("autonomousInit")
         self.drivetrain.reset_encoders()
-        self.state = 5
+        self.state = State.FIND_OPPONENT
+        self.target_search_angle = 0.0
+        self.target_ram_heading = 0.0
 
-    def autonomousPeriodic(self):
- 
-        # ---------------- CONSTANTS ----------------
-        LINE_THRESHOLD   = 0.65    # Reflectance value above which a line is detected (0.0–1.0)
-        BASE_SPEED       = -0.8    # Drive speed (0.0–1.0)
-        # -------------- HELPER FUNCTIONS --------------
- 
-        def line_front_detected():
+ # -------------- HELPER FUNCTIONS -------------- 
+
+    def line_front_detected(self):
             """Returns True if either front sensors sees a line."""
             left_front_val = self.drivetrain.front_reflectance.getLeftReflectanceValue()
             right_front_val = self.drivetrain.front_reflectance.getRightReflectanceValue()
             return left_front_val > LINE_THRESHOLD or right_front_val > LINE_THRESHOLD
  
-       # def line_rear_detected():
+    # def line_rear_detected(self):
             """Returns True if either rear sensors sees a line."""
-            left_back_val = self.drivetrain.rear_reflectance.getLeftReflectanceValue()
-            right_back_val = self.drivetrain.rear_reflectance.getRightReflectanceValue()
-            return left_back_val > LINE_THRESHOLD or right_back_val > LINE_THRESHOLD
+            left_rear_val = self.drivetrain.get_left_rear_reflectance()
+            # right_rear_val = self.drivetrain.get_right_rear_reflectance()
+            return left_rear_val > LINE_THRESHOLD or right_rear_val > LINE_THRESHOLD
         
-        def opponent_detected():
-            return self.drivetrain.object_detection()
-        
+    def opponent_detected(self):
+        return self.drivetrain.object_detection()
+
+    def autonomousPeriodic(self):
+            
+        if self.state != State.LINE_DETECTED and self.line_front_detected():
+            left_hit = self.drivetrain.get_left_front_reflectance() > LINE_THRESHOLD
+            right_hit = self.drivetrain.get_right_front_reflectance() > LINE_THRESHOLD
+            
+            if left_hit or right_hit:
+                self.line_entry_angle = self.drivetrain.get_gyro_angle()
+                
+                turn_offset = 135.0 if left_hit else -135.0
+                self.target_escape_angle = self.line_entry_angle + turn_offset
+
         # ---------------- STATE MACHINE ----------------
-        class State(Enum):
-            RAM = 0
-            FIND_OPPONENT = 1
-            LINE_DETECTED = 2
 
-        self.state = State.FIND_OPPONENT
+        match(self.state):
+            case (State.RAM):
+                self.drivetrain.drive_straight(-BASE_SPEED, self.target_ram_heading)
+                if not self.opponent_detected():
+                    self.state = State.FIND_OPPONENT
+            case (State.FIND_OPPONENT):
+                self.target_search_angle += 2.5 
+                self.drivetrain.rotate_drivetrain(self.target_search_angle)
+                if self.opponent_detected():
+                    self.target_ram_heading = self.drivetrain.get_gyro_angle()
+                    self.state = State.RAM
 
-        def state_machine():
-            match(self.state):
-                case (State.RAM):
-                    self.drivetrain.drive_straight(BASE_SPEED)
-                    if opponent_detected() == False:
-                        self.state = State.FIND_OPPONENT
-                case (State.FIND_OPPONENT):
-                    self.drivetrain.rotate_drivetrain(360)
-                    print("FINDING OPPONENT...")
-                    if opponent_detected() == True:
-                        self.drivetrain.reset_encoders()
-                        self.state = State.RAM
-                case (State.LINE_DETECTED):
-                    if line_front_detected():
-                        "hello"
-                        
-
-        # state_machine()
-        # print(self.drivetrain.object_detection())
-        self.drivetrain.drive_straight(0.8)
- 
+            case (State.LINE_DETECTED):
+                print("line detected")
+                self.drivetrain.rotate_drivetrain(self.target_escape_angle)
+                
+                current_error = self.target_escape_angle - self.drivetrain.get_gyro_angle()
+                if abs(current_error) < 10.0 and not self.line_front_detected():
+                    self.target_search_angle = self.drivetrain.get_gyro_angle()
+                    self.state = State.FIND_OPPONENT
  
 if __name__ == "__main__":
     wpilib.run(MyRobot)
-
-

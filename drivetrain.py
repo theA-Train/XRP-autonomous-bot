@@ -30,7 +30,7 @@ class CustomPIDController():
 
         # Initializing
         self.integral = 0
-        self.initial_time = None
+        self.last_time = None
         self.last_error = 0
 
     def calculate(self, error):
@@ -42,11 +42,11 @@ class CustomPIDController():
         """
         now = wpilib.Timer.getFPGATimestamp()
         
-        if self.initial_time is None:
-            self.initial_time = now
+        if self.last_time is None:
+            self.last_time = now
             self.last_error = error
             return self.kP * error
-        dt = now - self.initial_time
+        dt = now - self.last_time
         if dt <= 0:
             return self.kP * error
         
@@ -96,20 +96,21 @@ class Drivetrain(Subsystem):
 
         # --- Line Sensors ---
         self.front_reflectance = XRPReflectanceSensor()
-        self.rear_reflectance = XRPReflectanceSensor()
+       # self.rear_left_reflectance = wpilib.AnalogInput(2)
+        # self.rear_right_reflectance = wpilib.AnalogInput(3)
 
         # PID controllers
         self.drive_pid = CustomPIDController(0.01, 0, 0.001)
         self.gyro_pid = CustomPIDController(0.3, 0.0, 0.2)
 
         # Weighted constant for error fusion
-        self.alpha = 0.4
+        self.alpha = 0.6
 
         # Error tolerance constants
         self.error_gyro_tolerance = 3
 
         # Range finder ram detection constant
-        self.ram_range = 0.5
+        self.ram_range = 0.3
     
     def set_motor_speeds(self, left_speed: float, right_speed: float):
         self.left_front_motor.set(left_speed)
@@ -133,7 +134,7 @@ class Drivetrain(Subsystem):
     def get_gyro_angle(self) -> float:
         return wpimath.angleModulus(self.gyro.getAngle()) * (180/math.pi)
     
-    def drive_straight(self, base_speed: float, target_heading = 0.0):
+    def drive_straight(self, base_speed: float, target_heading):
         left_avg_dist = (self.left_rear_encoder.getDistance() + self.left_front_encoder.getDistance()) / 2
         right_avg_dist = (self.right_front_encoder.getDistance() + self.right_rear_encoder.getDistance()) / 2
 
@@ -144,7 +145,7 @@ class Drivetrain(Subsystem):
         correction = self.drive_pid.calculate(fused_error)
 
         self.set_motor_speeds(base_speed + correction, base_speed - correction)
-        print(self.get_gyro_angle())
+        # print(self.get_gyro_angle())
 
     def rotate_drivetrain(self, target_angle: float):
 
@@ -159,7 +160,14 @@ class Drivetrain(Subsystem):
         turn_speed = max(-1.0, min(1.0, turn_speed))
 
         self.set_motor_speeds(turn_speed, -turn_speed)
-        print(self.get_gyro_angle())
+        # print(self.get_gyro_angle())
 
     def object_detection(self) -> bool:
         return self.range.getDistance() < self.ram_range
+    
+    def get_right_front_reflectance(self):
+        return self.front_reflectance.getRightReflectanceValue()
+    
+    def get_left_front_reflectance(self):
+        return self.front_reflectance.getLeftReflectanceValue()
+    
