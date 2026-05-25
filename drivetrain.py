@@ -52,8 +52,6 @@ class CustomPIDController():
         
         p_out = self.kP * error
 
-
-
         self.integral += error * dt
         i_out = self.kI * self.integral
 

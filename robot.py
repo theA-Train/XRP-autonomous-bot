@@ -12,6 +12,8 @@ os.environ["HALSIMXRP_PORT"] = "3540"
 LINE_THRESHOLD   = 0.7    # Reflectance value above which a line is detected (0.0–1.0)
 BASE_SPEED       = 0.7    # Drive speed (0.0–1.0)
 TILT_ANGLE       = 10.0   # Ramp degree tilt
+ACCEPTABLE_GYRO_ERROR = 2
+
 class State(Enum):
     RAM = 0
     FIND_OPPONENT = 1
@@ -34,7 +36,6 @@ class MyRobot(wpilib.TimedRobot):
         self.drive_clear_timer = wpilib.Timer()
         self.driving_clear = False   
  # -------------- HELPER FUNCTIONS -------------- 
-
     def tilt_detection(self):
         if self.drivetrain.get_yaw_angle() > TILT_ANGLE:
             return True
@@ -71,6 +72,7 @@ class MyRobot(wpilib.TimedRobot):
         if self.line_front_detected():
             self.state = State.LINE_DETECTED
         # print(self.drivetrain.get_left_front_reflectance())
+        print(self.drivetrain.range.getDistance())
 
         if self.tilt_detection():
             self.state = State.TILTED
@@ -92,8 +94,7 @@ class MyRobot(wpilib.TimedRobot):
             case (State.LINE_DETECTED):
                 print("line detected")
                 self.drivetrain.rotate_drivetrain(self.target_escape_angle)
-                current_error = self.target_escape_angle - self.drivetrain.get_gyro_angle()
-                if abs(current_error) >= 10.0:
+                if (self.target_escape_angle - self.drivetrain.get_gyro_angle()) < ACCEPTABLE_GYRO_ERROR:
                     self.drivetrain.rotate_drivetrain(self.target_escape_angle)
                     self.driving_clear = False
             
