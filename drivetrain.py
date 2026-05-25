@@ -106,18 +106,30 @@ class Drivetrain(Subsystem):
         # Weighted constant for error fusion
         self.alpha = 0.6
 
+        # max and min effort
+        self.max_effort = 0.7
+        self.min_effort = -0.7
+
         # Error tolerance constants
         self.error_gyro_tolerance = 3
 
         # Range finder ram detection constant
-        self.ram_range = 0.3
+        self.ram_range = 0.4
+
+    def clamp_motor_values(self, value: float) -> float:
+        '''
+        Clamps a value to -1 and 1 so motors aren't being set to values higher or lower than that.
+        
+        :param value: Value being clamped between -1 and 1
+        '''
+        return max(min(value, self.max_effort),self.min_effort)
     
     def set_motor_speeds(self, left_speed: float, right_speed: float):
-        self.left_front_motor.set(left_speed)
-        self.left_rear_motor.set(left_speed)
+        self.left_front_motor.set(self.clamp_motor_values(left_speed))
+        self.left_rear_motor.set(self.clamp_motor_values(left_speed))
 
-        self.right_front_motor.set(right_speed)
-        self.right_rear_motor.set(right_speed)
+        self.right_front_motor.set(self.clamp_motor_values(right_speed))
+        self.right_rear_motor.set(self.clamp_motor_values(right_speed))
 
     def reset_encoders(self):
         self.left_front_encoder.reset()
@@ -133,6 +145,9 @@ class Drivetrain(Subsystem):
     
     def get_gyro_angle(self) -> float:
         return wpimath.angleModulus(self.gyro.getAngle()) * (180/math.pi)
+    
+    def get_yaw_angle(self) -> float:
+        return wpimath.angleModulus(self.gyro.getAngleX()) * (180/math.pi)
     
     def drive_straight(self, base_speed: float, target_heading):
         left_avg_dist = (self.left_rear_encoder.getDistance() + self.left_front_encoder.getDistance()) / 2
@@ -158,8 +173,9 @@ class Drivetrain(Subsystem):
         if abs(turn_speed) < minimum_speed:
             turn_speed = math.copysign(minimum_speed, turn_speed)
         turn_speed = max(-1.0, min(1.0, turn_speed))
-
-        self.set_motor_speeds(turn_speed, -turn_speed)
+        
+        self.left_rear_motor.set(turn_speed)
+        self.right_rear_motor.set(-turn_speed)
         # print(self.get_gyro_angle())
 
     def object_detection(self) -> bool:
