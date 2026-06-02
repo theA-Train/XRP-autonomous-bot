@@ -14,23 +14,27 @@ class MyRobot(wpilib.TimedRobot):
 		print("robotInit")
 		self.drivetrain = Drivetrain()
 
+	def is_path_clear(self):
+		# return True if the path ahead is clear (range > 0.4 meters).
+		return self.drivetrain.get_range() > 0.4
+
 	def autonomousInit(self):
 		self.drivetrain.right_encoder.reset()
 		self.drivetrain.left_encoder.reset()
 
-		# initializing all the commands to run the ramp routine
-		self.drive_to_ramp_command = Drive_To_Distance(self.drivetrain, 5500, 0.4)
-		self.drive_up_ramp_command = Drive_To_Distance(self.drivetrain, 34300, 0.7)
-		self.rotate_to_ramp_command = Rotate_Drivetrain(self.drivetrain, 85)
-		self.rotate_from_ramp_command = Rotate_Drivetrain(self.drivetrain, 88)
-		self.drive_bridge_command = Drive_To_Distance(self.drivetrain, 20000, 0.4)
-		self.wait_command = Wait(0.3)
+		# base commands for driving and rotating the drivetrain
+		self.drive_command = Drive_To_Distance(self.drivetrain, 500, 0.4)
+		# rotate 40 degrees from current heading
+		self.rotate_command = Rotate_Drivetrain(self.drivetrain, self.drivetrain.get_gyro_angle() + 40)
 
-		# the ramp_routine class passes in all the commands initalized above into a "sequential command group" that runs one by one
-		self.ramp_auto = Ramp_Routine(self.drive_to_ramp_command, self.wait_command, self.rotate_to_ramp_command, self.drive_up_ramp_command, self.rotate_from_ramp_command, self.drive_bridge_command)
-		# self.rotate_to_ramp_command.schedule()
-		self.ramp_auto.schedule()
-		# self.drive_up_ramp_command.schedule()
+
+		# drive until you bump / detect an obstacle within 0.4 meters
+		if self.is_path_clear():
+			self.drive_command.schedule()
+		else:
+			# rotate repeatedly until you no longer detect a wall
+			self.rotate_detection = self.rotate_command.repeatedly().until(self.is_path_clear)
+			self.rotate_detection.schedule()
 		print("autonomousInit")
 
 	def autonomousPeriodic(self):

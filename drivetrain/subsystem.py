@@ -1,7 +1,7 @@
 from wpilib import Encoder
 import wpimath
 from commands2 import Subsystem
-from xrp import XRPMotor, XRPGyro
+from xrp import XRPMotor, XRPGyro, XRPRangefinder
 import math
 
 class Drivetrain(Subsystem):
@@ -19,6 +19,10 @@ class Drivetrain(Subsystem):
         self.left_encoder = Encoder(4,5)
         self.right_encoder = Encoder(6,7)
         self.gyro = XRPGyro()
+        self.rangefinder = XRPRangefinder()
+
+        self.left_encoder.setDistancePerPulse(7.47 / 585)
+        self.right_encoder.setDistancePerPulse(7.47 / 585) # convert to cm
 
     def get_gyro_angle(self):
         '''
@@ -42,6 +46,12 @@ class Drivetrain(Subsystem):
         """
         self.right_motor.set(self.clamp_motor_values(Rvalue))
         self.left_motor.set(self.clamp_motor_values(Lvalue))
+    
+    def get_range(self):
+        """
+        get distance of rangefinder in meters (up to 4m)
+        """
+        return self.rangefinder.getDistance()
     
 
 
